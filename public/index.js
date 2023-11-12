@@ -4,6 +4,10 @@ var midi, data;
 
 function setUpEverything() {
    context = new AudioContext();
+   if (context instanceof AudioContext) {
+    document.getElementById("start-button").innerHTML = "Audio Engine Started";
+    document.getElementById("start-button").disabled = true;
+   }
   var oscillators = {};
   
   if (navigator.requestMIDIAccess) {

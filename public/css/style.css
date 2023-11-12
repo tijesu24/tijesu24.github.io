@@ -219,6 +219,7 @@ body {
 
 .start-button:disabled {
     cursor: default;
+    background-color: #9198bd;
 }
 
 .start-button:focus {
