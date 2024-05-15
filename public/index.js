@@ -3,13 +3,13 @@ var context = {};
 var midi, data;
 
 function setUpEverything() {
-   context = new AudioContext();
-   if (context instanceof AudioContext) {
+  context = new AudioContext();
+  if (context instanceof AudioContext) {
     document.getElementById("start-button").innerHTML = "Audio Engine Started";
     document.getElementById("start-button").disabled = true;
-   }
+  }
   var oscillators = {};
-  
+
   if (navigator.requestMIDIAccess) {
     navigator
       .requestMIDIAccess({
@@ -56,10 +56,10 @@ function onMIDImessage(messageData) {
 function play(note) {
   switch (note.on) {
     case 144:
-      if(note.velocity == 0)
-      noteOff(frequency(note.pitch), note.velocity);
+      if (note.velocity == 0)
+        noteOff(frequency(note.pitch), note.velocity);
       else
-      noteOn(frequency(note.pitch), note.velocity);
+        noteOn(frequency(note.pitch), note.velocity);
       break;
     case 128:
       noteOff(frequency(note.pitch), note.velocity);
@@ -87,16 +87,16 @@ function play(note) {
 
 
 
-(function(window, document, undefined) {
+(function (window, document, undefined) {
   var notes, midi, currentInput;
 
   function onMidiMessage(msg) {
     var action = isNoteOffMessage(msg) ? 'remove' :
-                   (isNoteOnMessage(msg) ? 'add' : null),
-        noteDiv;
-    if(action && (noteDiv = getNoteDiv(msg))) {
+      (isNoteOnMessage(msg) ? 'add' : null),
+      noteDiv;
+    if (action && (noteDiv = getNoteDiv(msg))) {
       noteDiv.classList[action]('piano-key-pressed');
-      
+
       // -- Remove these lines if you're building the app from Medium ------------
       // -- Otherwise you'll get multiple appended elemetns ----------------------
       // if (msg.data[0] == 144) {
@@ -113,7 +113,7 @@ function play(note) {
   function getNoteDiv(msg) {
     var noteNum = getMessageNote(msg) - MIDI_A0_NUM;
 
-    if(notes && 0 <= noteNum && noteNum < notes.length) {
+    if (notes && 0 <= noteNum && noteNum < notes.length) {
       return notes[noteNum];
     }
   }
@@ -136,8 +136,8 @@ function play(note) {
   function getMessageVelocity(msg) { return msg.data[2]; }
 
   function selectInput(input) {
-    if(input != currentInput) {
-      if(currentInput) {
+    if (input != currentInput) {
+      if (currentInput) {
         currentInput.removeEventListener('midimessage', onMidiMessage);
         currentInput.close();
       }
@@ -150,7 +150,7 @@ function play(note) {
   function populateInputList() {
     var inputs = Array.from(midi.inputs.values());
 
-    if(inputs.length == 1) {
+    if (inputs.length == 1) {
       selectInput(inputs[0]);
     } else {
       // TODO: handle multiple MIDI inputs
@@ -167,7 +167,7 @@ function play(note) {
     console.error('Request for MIDI access was denied!');
   }
 
-  if('requestMIDIAccess' in window.navigator) {
+  if ('requestMIDIAccess' in window.navigator) {
     window.navigator
       .requestMIDIAccess()
       .then(onMIDIAccessSuccess, onMIDIAccessFail);
@@ -175,17 +175,66 @@ function play(note) {
     console.error('Your device doesn\' support WebMIDI or its polyfill');
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     notes = document.getElementsByClassName('piano-key');
   }, false);
 
   //extrnal midi will trigger this
   function updateKeyboard() {
-      var action = isNoteOffMessage(msg) ? 'remove' :
-                   (isNoteOnMessage(msg) ? 'add' : null),
-          noteDiv;
-      if(action && (noteDiv = getNoteDiv(msg))) {
-        noteDiv.classList[action]('piano-key-pressed-external');
-      }
+    var action = isNoteOffMessage(msg) ? 'remove' :
+      (isNoteOnMessage(msg) ? 'add' : null),
+      noteDiv;
+    if (action && (noteDiv = getNoteDiv(msg))) {
+      noteDiv.classList[action]('piano-key-pressed-external');
+    }
   }
 })(window, window.document);
+
+
+
+const KEY_TO_MIDI_MAP = {
+  '1': 49,  // C4
+  '2': 50,  // D4
+  '3': 52,  // E4
+  '4': 53,  // F4
+  '5': 55,  // G4
+  '6': 57,  // A4
+  '7': 59,  // B4
+  '8': 60,  // C5
+  '9': 62,  // D5
+  '0': 64,  // E5
+  'q': 65,  // F5
+  'w': 67,  // G5
+  'e': 69,  // A5
+  'r': 71,  // B5
+  't': 72,  // C6
+  'y': 74,  // D6
+  'u': 76,  // E6
+  'i': 78,  // F6
+  'o': 80,  // G6
+  'p': 81,  // A6
+}
+
+document.addEventListener('keydown', function (event) {
+  const key = event.key.toLowerCase(); // Get the pressed key in lowercase
+  const midiNote = KEY_TO_MIDI_MAP[key];
+
+  if (midiNote) {
+    // Simulate a MIDI message for the pressed key
+    const message = { data: [144, midiNote, 100] }; // Note On with velocity 100
+    onMIDImessage(message); // Pass the simulated message to the existing handler
+  }
+});
+
+function onKeyUp(event) {
+  const key = event.key.toLowerCase();
+  const midiNote = KEY_TO_MIDI_MAP[key];
+
+  if (midiNote) {
+    // Simulate a MIDI message for the released key
+    const message = { data: [128, midiNote, 0] }; // Note Off with velocity 0
+    onMIDImessage(message);
+  }
+}
+
+document.addEventListener('keyup', onKeyUp);
